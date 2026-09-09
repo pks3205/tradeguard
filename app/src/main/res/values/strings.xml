@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">XAUUSD Setup Alerts</string>
+
+    <string name="channel_alerts_name">XAUUSD setup alerts</string>
+    <string name="channel_alerts_desc">Final, high-quality XAUUSD 15-minute setup notifications</string>
+    <string name="channel_status_name">Scanner status</string>
+    <string name="channel_status_desc">Persistent notification shown while the scanner is running</string>
+
+    <string name="status_notif_title">XAUUSD M15 scanner running</string>
+    <string name="status_notif_text">Scanning completed 15-minute candles every 60 seconds</string>
+</resources>
