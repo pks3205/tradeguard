@@ -43,7 +43,13 @@ class ScannerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> start()
-            ACTION_STOP -> stopSelf()
+            ACTION_STOP -> {
+                stopSelf()
+                return START_NOT_STICKY
+            }
+            // System restarted a previously-running service (START_STICKY):
+            // re-enter foreground state and resume polling.
+            null -> if (prefs.scannerRunning) start()
         }
         return START_STICKY
     }
