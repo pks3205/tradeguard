@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "XAUUSDSetupAlerts"
+rootProject.name = "XAUUSDSetupChecklist"
 include(":app")
