@@ -1,93 +1,88 @@
-# XAUUSD Setup Checklist
+# Internet Access Control (Windows 64-bit)
 
-A standalone Android app with a **manual rule-list checklist** for XAUUSD (gold) on the
-15-minute timeframe. It is **not a scanner**: there is no live feed, no background service,
-and no notifications. You tick each rule against **your own broker chart** before taking a
-trade.
+Ek chhota Windows app jo **saare installed/running applications** ki list dikhata hai —
+har app ke saamne checkbox ke saath. App ka simple rule:
 
-- ❌ No trade execution
-- ❌ No broker connection
-- ❌ No "BUY NOW / SELL NOW" instructions
-- ❌ No background scanning / polling / notifications
+> **CHECKED = Internet BLOCKED**
+> **UNCHECKED = Internet ALLOWED**
 
-| | |
-|---|---|
-| Package | `com.tradeguard.xauusd` |
-| Language | Kotlin + Jetpack Compose (Material 3) |
-| minSdk / targetSdk / compileSdk | 26 / 35 / 35 |
-| JVM | Java 17 / Kotlin JVM toolchain 17 |
-| Persistence | SharedPreferences (one boolean per rule) |
+Matlab: **jisme check NAHI rahega, sirf usi ka internet chalega.** Pehle "Check All"
+dabao (sab block), phir jin apps ko internet chahiye unhe uncheck karo, aur "Apply Rules"
+dabao. Bas — checked apps ka internet Windows Firewall ke outbound rules se band ho jata hai.
+
+- ✅ "Check All" / "Uncheck All" buttons
+- ✅ "Add program..." se koi bhi `.exe` manually add karo
+- ✅ Selection auto-save hota hai (`%LOCALAPPDATA%\InternetAccessControl\state.json`)
+- ✅ Sirf internet block karta hai — koi file delete nahi karta
+- ⚠️ Administrator rights chahiye (UAC prompt khud aata hai)
 
 ---
 
-## What the app does
+## Instant run (bina build ke — abhi)
 
-The home screen lets you pick a **setup** and a **direction (BUY / SELL)**, then shows the
-ordered rule checklist for that combination:
+1. Is repo ki `windows/` folder ki do files download karo:
+   - `InternetAccessControl.ps1`
+   - `InternetAccessControl.bat`
+2. Dono ko ek hi folder mein rakho.
+3. **`InternetAccessControl.bat` par double-click** karo → UAC prompt par "Yes" → checklist window khul jayegi.
 
-- Setup 1 · Liquidity Sweep → MSS → FVG entry
-- Setup 2 · New York Opening Range Breakout
+(Alternate: PowerShell mein `Set-ExecutionPolicy Bypass -Scope Process` ke baad
+`.\InternetAccessControl.ps1` chalao.)
 
-Each rule is a checkbox. Progress is shown as "X / N rules", and when **all** rules are
-checked the app shows an "All rules checked" banner reminding you to verify every level on
-your broker chart — it never tells you to buy or sell.
+## Asli .exe banana
 
-### Setup 1 — Liquidity Sweep → MSS → FVG entry
+Asli 64-bit `.exe` (`InternetAccessControl.exe`, single file) C# WinForms source se banta hai:
+`windows/exe/InternetAccessControl.csproj`.
 
-BUY checklist (SELL is the exact inverse):
+**Local build (Windows + .NET 8 SDK chahiye):**
 
-1. Prior swing low (SSL) exists — 2-candle fractal swing.
-2. Price wicked below that swing low.
-3. Sweep candle closed back above the swept low.
-4. Bullish displacement candle (body ≥ 1.5× average of the previous 14 candles).
-5. Bullish MSS — a candle closed above the latest lower high.
-6. Bullish 3-candle FVG (candle 1 high < candle 3 low).
-7. A later M15 candle retraced into the FVG and closed above its lower boundary.
-8. SL below the sweep low with an ATR/range buffer.
-9. TP at the relevant previous high (BSL).
-10. Risk:reward ≥ 1:2.
+```bat
+cd windows\exe
+dotnet publish InternetAccessControl.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out
+rem exe: out\InternetAccessControl.exe
+```
 
-### Setup 2 — New York Opening Range Breakout
+**GitHub Actions build (recommended):**
 
-Opening range is **fixed in India time**: **5:30 PM–6:00 PM IST** (`Asia/Kolkata`), no DST
-shift. The range high/low is built from the two M15 candles in that window.
+1. `windows/build-windows.yml.example` ko copy karke `.github/workflows/build-windows.yml`
+   naam se repo mein add karo (Actions tab se bhi bana sakte ho).
+2. Push hote hi build chalega aur `InternetAccessControl.exe` artifact milega
+   (Actions run page → Artifacts → `InternetAccessControl-win64`).
 
-BUY checklist (SELL is the inverse):
-
-1. Range high/low built from the two M15 candles between 5:30–6:00 PM IST.
-2. A completed M15 candle closed above the range high.
-3. Price later retested the broken range high.
-4. A bullish continuation candle closed above the retest candle high.
-5. EMA 20 > EMA 50.
-6. Current price is above EMA 20.
-7. SL below the retest/range level.
-8. Risk:reward ≥ 1:2.
+> Note: ye `.exe` `requireAdministrator` manifest ke saath banta hai, isliye double-click
+> karte hi UAC prompt aayega.
 
 ---
 
-## Build
+## How it works (technically)
 
-```bash
-./gradlew --no-daemon testDebugUnitTest   # run unit tests
-./gradlew --no-daemon assembleDebug       # build the debug APK
-# APK: app/build/outputs/apk/debug/app-debug.apk
+- App **installed programs** (Start Menu shortcuts) + **abhi chal rahe programs** ki list
+  banata hai. Windows system files (`C:\Windows`) ko list se bahar rakha jata hai taaki
+  Windows khud break na ho.
+- **Checked app** → `netsh advfirewall firewall add rule ... dir=out action=block`
+  (ek outbound block rule, sirf usi app ke liye).
+- **Unchecked app** → usi app ka block rule delete ho jata hai (internet wapas).
+- Har rule ka naam unique hota hai (app name + path ka hash), isliye ek hi app baar-baar
+  block nahi hota.
+
+## Safety & notes
+
+- Sirf **outbound** internet block hota hai. LAN/localhost nahi chhoota, aur koi file
+  delete nahi hoti.
+- System processes (Windows folder ke) deliberately list mein nahi dikhte.
+- Agar galat app block ho jaye: app kholo, use **uncheck** karo, **Apply Rules** dabao —
+  internet wapas aa jayega.
+- Ye ek utility hai; iska galat istemal (kisi aur ke system par bina permission ke) na karein.
+
+## Repo layout
+
 ```
-
-Requirements: JDK 17 and the Android SDK (compileSdk 35). CI is provided by
-`.github/workflows/build-apk.yml` (JDK 17 → unit tests → `assembleDebug` → upload the APK as
-artifact `xauusd-setup-alerts-debug`).
-
-## Project layout
-
+windows/
+├── InternetAccessControl.ps1      # instant GUI app (PowerShell + WinForms)
+├── InternetAccessControl.bat      # double-click launcher
+├── build-windows.yml.example      # GitHub Actions workflow (copy to .github/workflows/)
+└── exe/                           # C# WinForms source for the real .exe
+    ├── InternetAccessControl.csproj
+    ├── app.manifest
+    └── Program.cs
 ```
-app/src/main/java/com/tradeguard/xauusd/
-├── model/    ChecklistCatalog + Rule/Setup data (pure, unit-testable)
-├── store/    ChecklistStore (SharedPreferences persistence)
-└── MainActivity.kt   Compose checklist screen
-app/src/test/java/com/tradeguard/xauusd/ChecklistCatalogTest.kt
-```
-
-## Disclaimer
-
-This is a manual checklist for education and record-keeping, **not financial advice** and
-**not a trading signal**. Always confirm every rule on your own broker chart.

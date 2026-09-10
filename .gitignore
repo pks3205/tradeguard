@@ -1,12 +1,9 @@
-*.iml
-.gradle
-.idea/
-build/
-local.properties
-.DS_Store
-captures/
-.externalNativeBuild/
-.cxx/
-*.apk
-*.aab
-.kotlin/
+# Build outputs (dotnet / Visual Studio)
+bin/
+obj/
+out/
+*.user
+.vs/
+
+# Runtime state must never be committed
+state.json
