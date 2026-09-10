@@ -23,8 +23,6 @@ data class Setup(
  */
 object ChecklistCatalog {
 
-    val setups: List<Setup> = listOf(SweepMssFvg, NyOpeningRange)
-
     val SweepMssFvg = Setup(
         id = "sweep_mss_fvg",
         shortTitle = "Setup 1 · Sweep→MSS→FVG",
@@ -82,6 +80,8 @@ object ChecklistCatalog {
             Rule("s2_sell_8", "Risk:reward ≥ 1:2")
         )
     )
+
+    val setups: List<Setup> = listOf(SweepMssFvg, NyOpeningRange)
 
     fun allRules(): List<Rule> = setups.flatMap { it.buy + it.sell }
 }
