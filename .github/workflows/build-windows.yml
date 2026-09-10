@@ -1,0 +1,27 @@
+name: Build Windows App
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish single-file 64-bit exe
+        run: dotnet publish windows/exe/InternetAccessControl.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: InternetAccessControl-win64
+          path: out/InternetAccessControl.exe
+          if-no-files-found: error
